@@ -15,6 +15,7 @@ python = "3.10.*"
 jupyter = "*"
 ipykernel = "*"
 swig = "*"
+cxx-compiler = "*"
 
 [pypi-dependencies]
 gymnasium = "*"
