@@ -6,6 +6,9 @@ platforms = ["osx-64", "linux-64"]
 version = "0.1.0"
 
 [tasks]
+register-kernel = "python -m ipykernel install --user --name atterrisseur_lunaire --display-name \"Eagle-1\""
+lab = "jupyter lab notebooks/"
+notebook = "jupyter notebook notebooks/"
 
 [dependencies]
 python = "3.10.*"
