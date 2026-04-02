@@ -14,12 +14,10 @@ notebook = "jupyter notebook notebooks/"
 python = "3.10.*"
 jupyter = "*"
 ipykernel = "*"
-swig = "*"
-cxx-compiler = "*"
+box2d-py = "*"
 
 [pypi-dependencies]
 gymnasium = "*"
 stable-baselines3 = "*"
 matplotlib = "*"
 pygame = "*"
-box2d-py = "*"
