@@ -1,5 +1,5 @@
 /**
- * Script pour remplacer les cellules RecordVideo par une version ffmpeg.
+ * Script pour remplacer les cellules RecordVideo par une version imageio.
  * Exécute: node fix_videos.js
  */
 const fs = require('fs');
@@ -16,13 +16,13 @@ function fixNotebook(notebookPath, config) {
         const cell = nb.cells[i];
         if (cell.cell_type === 'code') {
             const source = cell.source.join('');
-            if (source.includes('RecordVideo') || source.includes('ffmpeg')) {
+            if (source.includes('RecordVideo') || source.includes('ffmpeg') || source.includes('subprocess')) {
                 cellsToRemove.push(i);
             }
         }
     }
     
-    console.log(`   Cellules video trouvées: ${cellsToRemove.length}`);
+    console.log(`   Cellules video trouvees: ${cellsToRemove.length}`);
     
     // Supprimer en sens inverse
     for (let i = cellsToRemove.length - 1; i >= 0; i--) {
@@ -35,7 +35,7 @@ function fixNotebook(notebookPath, config) {
     if (agentType === 'random') {
         code = [
             'import os\n',
-            'import subprocess\n',
+            'import imageio\n',
             'from IPython.display import Video\n',
             'from PIL import Image\n',
             '\n',
@@ -51,11 +51,12 @@ function fixNotebook(notebookPath, config) {
             '\n',
             'print("Enregistrement de ' + nEpisodes + ' episode(s)...", flush=True)\n',
             '\n',
+            'frames = []\n',
+            '\n',
             'for episode in range(' + nEpisodes + '):\n',
             '    state, info = env.reset()\n',
             '    total_reward = 0\n',
             '    terminated = truncated = False\n',
-            '    frame_idx = 0\n',
             '    \n',
             '    while not (terminated or truncated):\n',
             '        action = env.action_space.sample()\n',
@@ -64,26 +65,14 @@ function fixNotebook(notebookPath, config) {
             '        \n',
             '        frame = env.render()\n',
             '        if frame is not None:\n',
-            '            img = Image.fromarray(frame)\n',
-            '            img.save(f"{frames_dir}/frame_{episode:03d}_{frame_idx:04d}.png")\n',
-            '            frame_idx += 1\n',
+            '            frames.append(frame)\n',
             '    \n',
-            '    print(f"Episode {episode+1}: {total_reward:.1f} points ({frame_idx} frames)")\n',
+            '    print(f"Episode {episode+1}: {total_reward:.1f} points ({len(frames)} frames total)")\n',
             '\n',
             'env.close()\n',
             '\n',
             'video_path = f"{video_folder}/' + videoPrefix + '.mp4"\n',
-            'subprocess.run([\n',
-            '    "ffmpeg", "-y", "-framerate", "30",\n',
-            '    "-pattern_type", "glob",\n',
-            '    "-i", f"{frames_dir}/*.png",\n',
-            '    "-c:v", "libx264",\n',
-            '    "-pix_fmt", "yuv420p",\n',
-            '    video_path\n',
-            '], capture_output=True, check=True)\n',
-            '\n',
-            'import shutil\n',
-            'shutil.rmtree(frames_dir)\n',
+            'imageio.mimwrite(video_path, frames, fps=30)\n',
             '\n',
             'print(f"Video enregistree: {video_path}")\n',
             'Video(video_path, embed=True, width=640)'
@@ -91,9 +80,8 @@ function fixNotebook(notebookPath, config) {
     } else if (agentType === 'qtable') {
         code = [
             'import os\n',
-            'import subprocess\n',
+            'import imageio\n',
             'from IPython.display import Video\n',
-            'from PIL import Image\n',
             'import numpy as np\n',
             '\n',
             'frames_dir = "./videos/frames"\n',
@@ -108,11 +96,12 @@ function fixNotebook(notebookPath, config) {
             '\n',
             'print("Enregistrement de ' + nEpisodes + ' episode(s) avec agent Q-Learning...", flush=True)\n',
             '\n',
+            'frames = []\n',
+            '\n',
             'for episode in range(' + nEpisodes + '):\n',
             '    state, info = env.reset()\n',
             '    total_reward = 0\n',
             '    terminated = truncated = False\n',
-            '    frame_idx = 0\n',
             '    \n',
             '    while not (terminated or truncated):\n',
             '        action = np.argmax(q_table[state])\n',
@@ -121,27 +110,15 @@ function fixNotebook(notebookPath, config) {
             '        \n',
             '        frame = env.render()\n',
             '        if frame is not None:\n',
-            '            img = Image.fromarray(frame)\n',
-            '            img.save(f"{frames_dir}/frame_{episode:03d}_{frame_idx:04d}.png")\n',
-            '            frame_idx += 1\n',
+            '            frames.append(frame)\n',
             '    \n',
             '    result = "Succes!" if total_reward > 0 else "Echec"\n',
-            '    print(f"Episode {episode+1}: {result} (reward={total_reward:.1f}, {frame_idx} frames)")\n',
+            '    print(f"Episode {episode+1}: {result} (reward={total_reward:.1f})")\n',
             '\n',
             'env.close()\n',
             '\n',
             'video_path = f"{video_folder}/' + videoPrefix + '.mp4"\n',
-            'subprocess.run([\n',
-            '    "ffmpeg", "-y", "-framerate", "30",\n',
-            '    "-pattern_type", "glob",\n',
-            '    "-i", f"{frames_dir}/*.png",\n',
-            '    "-c:v", "libx264",\n',
-            '    "-pix_fmt", "yuv420p",\n',
-            '    video_path\n',
-            '], capture_output=True, check=True)\n',
-            '\n',
-            'import shutil\n',
-            'shutil.rmtree(frames_dir)\n',
+            'imageio.mimwrite(video_path, frames, fps=30)\n',
             '\n',
             'print(f"Video enregistree: {video_path}")\n',
             'Video(video_path, embed=True, width=640)'
@@ -150,9 +127,8 @@ function fixNotebook(notebookPath, config) {
         const modelType = modelPath.split('_')[0].toUpperCase();
         code = [
             'import os\n',
-            'import subprocess\n',
+            'import imageio\n',
             'from IPython.display import Video\n',
-            'from PIL import Image\n',
             '\n',
             'frames_dir = "./videos/frames"\n',
             'video_folder = "./videos"\n',
@@ -168,11 +144,12 @@ function fixNotebook(notebookPath, config) {
             '\n',
             'print("Enregistrement de ' + nEpisodes + ' episode(s) avec agent entraine...", flush=True)\n',
             '\n',
+            'frames = []\n',
+            '\n',
             'for episode in range(' + nEpisodes + '):\n',
             '    state, info = env.reset()\n',
             '    total_reward = 0\n',
             '    terminated = truncated = False\n',
-            '    frame_idx = 0\n',
             '    \n',
             '    while not (terminated or truncated):\n',
             '        action, _ = model.predict(state, deterministic=True)\n',
@@ -181,26 +158,14 @@ function fixNotebook(notebookPath, config) {
             '        \n',
             '        frame = env.render()\n',
             '        if frame is not None:\n',
-            '            img = Image.fromarray(frame)\n',
-            '            img.save(f"{frames_dir}/frame_{episode:03d}_{frame_idx:04d}.png")\n',
-            '            frame_idx += 1\n',
+            '            frames.append(frame)\n',
             '    \n',
-            '    print(f"Episode {episode+1}: {total_reward:.1f} points ({frame_idx} frames)")\n',
+            '    print(f"Episode {episode+1}: {total_reward:.1f} points ({len(frames)} frames total)")\n',
             '\n',
             'env.close()\n',
             '\n',
             'video_path = f"{video_folder}/' + videoPrefix + '.mp4"\n',
-            'subprocess.run([\n',
-            '    "ffmpeg", "-y", "-framerate", "30",\n',
-            '    "-pattern_type", "glob",\n',
-            '    "-i", f"{frames_dir}/*.png",\n',
-            '    "-c:v", "libx264",\n',
-            '    "-pix_fmt", "yuv420p",\n',
-            '    video_path\n',
-            '], capture_output=True, check=True)\n',
-            '\n',
-            'import shutil\n',
-            'shutil.rmtree(frames_dir)\n',
+            'imageio.mimwrite(video_path, frames, fps=30)\n',
             '\n',
             'print(f"Video enregistree: {video_path}")\n',
             'Video(video_path, embed=True, width=640)'
