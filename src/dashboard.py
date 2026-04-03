@@ -48,7 +48,7 @@ if st.button("🚀 Lancer l'évaluation (100 épisodes)"):
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Reward Moyen", f"{np.mean(rewards):.1f}")
     col2.metric("Médiane", f"{np.median(rewards):.1f}")
-    col2.metric("Std", f"{np.std(rewards):.1f}")
+    col3.metric("Std", f"{np.std(rewards):.1f}")
     col4.metric("Steps Moyen", f"{np.mean(steps):.1f}")
     
     st.session_state.rewards = rewards
