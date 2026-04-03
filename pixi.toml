@@ -15,6 +15,7 @@ python = "3.10.*"
 jupyter = "*"
 ipykernel = "*"
 box2d-py = "*"
+ffmpeg = "*"
 
 [pypi-dependencies]
 gymnasium = "*"
