@@ -16,6 +16,6 @@ __pycache__
 .ipynb_checkpoints
 
 # RL project specific
-models/
+# models/  # Décommenté pour inclure le modèle
 outputs/
 logs/
